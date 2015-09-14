@@ -2,47 +2,46 @@
   "environment" : "development",
   "production" : {
     "meetup" : {
-      "oauth_key" : "<production_meetup_consumer_key>",
-      "oauth_secret" : "<production_meetup_consumer_secret>",
-      "api_key" : "<meetup_api_key>",
-      "group_urlname" : "Meteor-Las-Vegas"
+      "oauth_key" : "<production_meetup_consumer_key ASK BEN>",
+      "oauth_secret" : "<production_meetup_consumer_secret ASK BEN>",
+      "api_key" : "<meetup_api_key ASK BEN>",
+      "group_urlname" : "Meteor-Chicago"
     }
   },
   "development" : {
     "meetup" : {
-      "oauth_key" : "<development_meetup_consumer_key>",
-      "oauth_secret" : "<development_meetup_consumer_secret>",
-      "api_key" : "<meetup_api_key>",
-      "group_urlname" : "Meteor-Las-Vegas"
+      "oauth_key" : "<development_meetup_consumer_key ASK BEN>",
+      "oauth_secret" : "<development_meetup_consumer_secret ASK BEN>",
+      "api_key" : "<meetup_api_key ASK BEN>",
+      "group_urlname" : "Meteor-Chicago"
     }
   },
   "public" : {
     "meetup" : {
-      "group_name" : "Meteor Vegas",
-      "group_urlname" : "Meteor-Las-Vegas",
-      "group_info" : "We are a group of Meteor.js enthusiasts who meet twice a month in Las Vegas, NV",
-      "meteorday": "http://www.meetup.com/Meteor-Las-Vegas/events/212820662/"
+      "group_name" : "Meteor Chicago",
+      "group_urlname" : "Meteor-Chicago",
+      "group_info" : "We are a group of Meteor.js enthusiasts who meet twice a month in Chicago, IL",
+      "meteorday": "http://www.meetup.com/Meteor-Chicago/events/225346449/"
     },
     "links" : {
-      "meetup": "http://www.meetup.com/Meteor-Las-Vegas/",
-      "twitter": "https://twitter.com/MeteorVegas",
-      "github": "https://github.com/meteor-vegas"
+      "meetup": "http://www.meetup.com/Meteor-Chicago/",
+      "github": "https://github.com/meteor-chicago"
     },
     "sponsors" : [
       {
-        "title" : "Differential",
-        "url" : "http://differential.io",
-        "image" : "/sponsors/differential.png"
+        "title" : "OK Grow!",
+        "url" : "http://okgrow.com",
+        "image" : "/sponsors/okg-logo.png"
       },
       {
-        "title" : "Modulus",
-        "url" : "http://modulus.io",
-        "image" : "/sponsors/modulus.png"
+        "title" : "The Meteor Chef",
+        "url" : "http://themeteorchef.com",
+        "image" : "/sponsors/meteorchef-logo.png"
       },
       {
-        "title" : "#VegasTech",
-        "url" : "http://vegastech.com",
-        "image" : "/sponsors/vegastech.png"
+        "title" : "TechNexus",
+        "url" : "http://technexus.com/",
+        "image" : "/sponsors/technexus-logo.png"
       }
     ]
   }
