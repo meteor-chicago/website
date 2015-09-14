@@ -32,35 +32,35 @@ Meteor.methods({
 		console.log ( "Fetching Meetup Member Profiles offset", offset);
 
 		Meteor.call('MeetupAPI', 'getProfiles', {"offset": offset, "page": 200, "group_urlname": group_urlname, "fields":"other_services"}, function(err, response) {
+			if (response) {
+				for (var i = 0, l = response.meta.count; i < l; i++) {
+					var node = response.results[i];
 
-			for (var i = 0, l = response.meta.count; i < l; i++) {
-				var node = response.results[i];
-
-				if(response.results[i].hasOwnProperty("photo") && response.results[i].photo.photo_link !== "") {
-					var thumbnailUrl = response.results[i].photo.photo_link;
-				} else {
-					var thumbnailUrl = "/default-avatar.png";
-				}
-
-				var socialLinks = [];
-				var userId;
-				var meetupUid = response.results[i].member_id;
-				for (service in response.results[i].other_services) {
-					if(service === "twitter") {
-						var username = response.results[i].other_services['twitter']['identifier'];
-						socialLinks.push({'service': 'twitter', 'url': 'https://twitter.com/' + username});
-					} else if(service) {
-						var url = response.results[i].other_services[service]['identifier'];
-						socialLinks.push({'service': service, 'url': url});
+					if(response.results[i].hasOwnProperty("photo") && response.results[i].photo.photo_link !== "") {
+						var thumbnailUrl = response.results[i].photo.photo_link;
+					} else {
+						var thumbnailUrl = "/default-avatar.png";
 					}
-				}
 
-				var existingUser = Meteor.users.findOne({'profile.meetupId': meetupUid});
-				if (existingUser) {
+					var socialLinks = [];
+					var userId;
+					var meetupUid = response.results[i].member_id;
+					for (service in response.results[i].other_services) {
+						if(service === "twitter") {
+							var username = response.results[i].other_services['twitter']['identifier'];
+							socialLinks.push({'service': 'twitter', 'url': 'https://twitter.com/' + username});
+						} else if(service) {
+							var url = response.results[i].other_services[service]['identifier'];
+							socialLinks.push({'service': service, 'url': url});
+						}
+					}
 
-					userId = existingUser._id;
-					Meteor.users.update({'profile.meetupId': meetupUid},
-						{ $set :
+					var existingUser = Meteor.users.findOne({'profile.meetupId': meetupUid});
+					if (existingUser) {
+
+						userId = existingUser._id;
+						Meteor.users.update({'profile.meetupId': meetupUid},
+							{ $set :
 							{
 								'profile.name': response.results[i].name,
 								'profile.bio': response.results[i].bio,
@@ -69,35 +69,36 @@ Meteor.methods({
 								'profile.thumbnailUrl': thumbnailUrl,
 								'profile.answers' : response.results[i].answers
 							}
-					});
-				} else {
-					userId = Meteor.users.insert({
-						profile: {
-							'meetupId': meetupUid,
-							'name': response.results[i].name,
-							'bio': response.results[i].bio,
-							'meetupProfileUrl': response.results[i].profile_url,
-							'socialLinks': socialLinks,
-							'thumbnailUrl': thumbnailUrl,
-							'answers' : response.results[i].answers
-						},
-						services: {
-							meetup: {
-								id: meetupUid
+							});
+					} else {
+						userId = Meteor.users.insert({
+							profile: {
+								'meetupId': meetupUid,
+								'name': response.results[i].name,
+								'bio': response.results[i].bio,
+								'meetupProfileUrl': response.results[i].profile_url,
+								'socialLinks': socialLinks,
+								'thumbnailUrl': thumbnailUrl,
+								'answers' : response.results[i].answers
+							},
+							services: {
+								meetup: {
+									id: meetupUid
+								}
 							}
-						}
-					});
-				}
+						});
+					}
 
-				//If the meetup user is in leadership team, then the json response will have a "role" variable returned with values such as "Organizer", "Co-Organizer" etc.
-				if ( response.results[i].role ) {
-					if (_(adminRoles).contains(response.results[i].role)) {
-						Roles.addUsersToRoles(userId, ['admin']);
+					//If the meetup user is in leadership team, then the json response will have a "role" variable returned with values such as "Organizer", "Co-Organizer" etc.
+					if ( response.results[i].role ) {
+						if (_(adminRoles).contains(response.results[i].role)) {
+							Roles.addUsersToRoles(userId, ['admin']);
+						}
 					}
 				}
 			}
 			// we surely habe more than 200 profiles, get the next page
-			if(response.meta.count == 200)
+			if(response && response.meta.count == 200)
 				Meteor.call("fetchProfiles", offset + 1);
 
 		});
@@ -106,16 +107,33 @@ Meteor.methods({
 	fetchEvents: function(status) {
 		console.log ( "Fetching Meetup Events");
 		Meteor.call('MeetupAPI', 'getEvents', {"group_urlname": group_urlname, "status": status, "fields":"featured"}, function(err, response) {
+			if (response) {
+				for (var i = 0, l = response.meta.count; i < l; i++) {
+					var meetupData = response.results[i];
+					var existingMeetup = Meetups.findOne({meetupId: meetupData['id']});
+					var meetupDocId; //Mongo doc _id of meetup document. This is not the meetup.com's meetupId
 
-			for (var i = 0, l = response.meta.count; i < l; i++) {
-				var meetupData = response.results[i];
-				var existingMeetup = Meetups.findOne({meetupId: meetupData['id']});
-				var meetupDocId; //Mongo doc _id of meetup document. This is not the meetup.com's meetupId
-
-				if (existingMeetup) {
-					meetupDocId = existingMeetup._id;
-					Meetups.update({_id: existingMeetup._id}, {
-						$set: {
+					if (existingMeetup) {
+						meetupDocId = existingMeetup._id;
+						Meetups.update({_id: existingMeetup._id}, {
+							$set: {
+								title: meetupData['name'],
+								description: meetupData['description'],
+								meetupId: meetupData['id'],
+								meetupUrl: meetupData['event_url'],
+								featured : meetupData['featured'],
+								dateTime: moment(meetupData['time']).toDate(),
+								location: {
+									name: meetupData['venue']['name'],
+									address: meetupData['venue']['address_1'],
+									lat: meetupData['venue']['lat'],
+									lon: meetupData['venue']['lon'],
+									description: meetupData['how_to_find_us']
+								}
+							}
+						});
+					} else {
+						meetupId = Meetups.insert({
 							title: meetupData['name'],
 							description: meetupData['description'],
 							meetupId: meetupData['id'],
@@ -129,46 +147,30 @@ Meteor.methods({
 								lon: meetupData['venue']['lon'],
 								description: meetupData['how_to_find_us']
 							}
-						}
-					});
-				} else {
-					meetupId = Meetups.insert({
-						title: meetupData['name'],
-						description: meetupData['description'],
-						meetupId: meetupData['id'],
-						meetupUrl: meetupData['event_url'],
-						featured : meetupData['featured'],
-						dateTime: moment(meetupData['time']).toDate(),
-						location: {
-							name: meetupData['venue']['name'],
-							address: meetupData['venue']['address_1'],
-							lat: meetupData['venue']['lat'],
-							lon: meetupData['venue']['lon'],
-							description: meetupData['how_to_find_us']
+						});
+					}
+
+					Meteor.call('MeetupAPI', 'getRSVPs', {"event_id": meetupData['id'], "rsvp": "yes"}, function(err, response) {
+						for (var j = 0, l = response.meta.count; j < l; j++) {
+							var rsvpData = response.results[j];
+							var meetupUserId = rsvpData['member']['member_id'];
+							var user = Meteor.users.findOne({'profile.meetupId': meetupUserId});
+							if (user) {
+								var meetup = Meetups.findOne({_id:meetupDocId});
+								if (!Activities.findOne({userId: user._id, subjectId: meetupDocId, type: 'rsvp'})) {
+									Meetups.update({_id: meetupDocId}, {$addToSet: {'attendeeIds': user._id}});
+									Activities.insert({
+										userId: user._id,
+										subjectId: meetupDocId,
+										subjectTitle: meetupData['name'],
+										subjectType: 'meetup',
+										type: 'rsvp'
+									});
+								}
+							}
 						}
 					});
 				}
-
-				Meteor.call('MeetupAPI', 'getRSVPs', {"event_id": meetupData['id'], "rsvp": "yes"}, function(err, response) {
-					for (var j = 0, l = response.meta.count; j < l; j++) {
-						var rsvpData = response.results[j];
-						var meetupUserId = rsvpData['member']['member_id'];
-						var user = Meteor.users.findOne({'profile.meetupId': meetupUserId});
-						if (user) {
-							var meetup = Meetups.findOne({_id:meetupDocId});
-							if (!Activities.findOne({userId: user._id, subjectId: meetupDocId, type: 'rsvp'})) {
-								Meetups.update({_id: meetupDocId}, {$addToSet: {'attendeeIds': user._id}});
-								Activities.insert({
-									userId: user._id,
-									subjectId: meetupDocId,
-									subjectTitle: meetupData['name'],
-									subjectType: 'meetup',
-									type: 'rsvp'
-								});
-							}
-						}
-					}
-				});
 			}
 		});
 	},
