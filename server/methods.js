@@ -1,9 +1,12 @@
 var	list=["getCategories","getCheckins","postCheckin","getCities","getOpenEvents","getConcierge","getEvents","postEvent","getEventComments","postEventComment","postEventCommentFlag","getEventCommentLikes","getEventRatings","postEventRating","getEventAttendance","takeEventAttendance","getEverywhereComments","postEverywhereComment","getEverywhereCommunities","postEverywhereCommunity","getEverywhereFollows","getEverywhereFollowers","postEverywhereFollow","postEverywhereContainer","getEverywhereContainers","postEverywhereSeed","postEverywhereEvent","getEverywhereEvents","postEverywhereRsvp","getEverywhereRsvps","getEverywhereSeeds","getActivity","getGroups","getComments","getMembers","postMemberPhoto","postMessage","getOEMBed","getOEMBed","getPhotoComments","postPhotoComment","getPhotoAlbums","getPhoto","getPhotos","postPhotoAlbum","postPhoto","getProfiles","postProfiles","postRSVP","getRSVPs","getOpenVenues","getVenues","getTopics"],
 	MeetupMe = Meteor.npmRequire("meetup-api");
-	var api_key = Meteor.settings[Meteor.settings.environment].meetup.api_key;
-	var group_urlname = Meteor.settings[Meteor.settings.environment].meetup.group_urlname;
-	var meetup = new MeetupMe(api_key);
-  var AsyncMeetup = Async.wrap(meetup, list);
+
+if (!Meteor.settings[Meteor.settings.environment]) throw new Meteor.Error("no-settings-json","Make sure to add your Meetup API credentials to settings.json. Run app by > $ meteor --settings settings.json");
+
+var api_key = Meteor.settings[Meteor.settings.environment].meetup.api_key;
+var group_urlname = Meteor.settings[Meteor.settings.environment].meetup.group_urlname;
+var meetup = new MeetupMe(api_key);
+var AsyncMeetup = Async.wrap(meetup, list);
 
 Meteor.methods({
 	MeetupAPI: function(endpoint, param) {
